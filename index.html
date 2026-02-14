@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mama I Love You</title>
+    <style>
+        :root {
+            --purple-bg-start: #2a003a;
+            --purple-bg-end: #0f001a;
+            --pink-neon: #ff00ff;
+            --pink-flower-center: #ff69b4;
+            --candle-color: #5d4037;
+            --candle-wick: #333;
+            --flame-color-inner: #ffd700;
+            --flame-color-outer: #ff8c00;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, var(--purple-bg-start) 0%, var(--purple-bg-end) 75%);
+            font-family: 'Arial', sans-serif;
+            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+        }
+
+        .container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .tap-me-hint {
+            position: absolute;
+            top: 40%; /* Adjust as needed */
+            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.7);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+            z-index: 1; /* Below candle */
+            pointer-events: none; /* Allows clicks to pass through to candle */
+        }
+
+        .tap-me-hint.hidden {
+            opacity: 0;
+        }
+
+        /* Candle Styling */
+        .candle-wrapper {
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 0.5s ease-out;
+            z-index: 2; /* Above hint */
+        }
+
+        .candle-body {
+            width: 50px;
+            height: 150px;
+            background-color: var(--candle-color);
+            border-radius: 5px 5px 0 0;
+            position: relative;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 2;
+        }
+
+        .candle-wick {
+            width: 3px;
+            height: 20px;
+            background-color: var(--candle-wick);
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+        }
+
+        .flame {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 25px;
+            height: 35px;
+            background: radial-gradient(circle at center, var(--flame-color-inner) 0%, var(--flame-color-outer) 50%, rgba(255, 140, 0, 0) 70%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: 0 0 15px 5px var(--flame-color-outer), 0 0 30px 10px rgba(255, 140, 0, 0.5);
+            animation: flicker 0.2s infinite alternate;
+            transform-origin: bottom;
+            z-index: 4;
+        }
+
+        @keyframes flicker {
+            0% { transform: translateX(-50%) scale(1); opacity: 1; }
+            50% { transform: translateX(-50%) scale(0.95); opacity: 0.9; }
+            100% { transform: translateX(-50%) scale(1.05); opacity: 1.05; }
+        }
+
+        .candle-wrapper.extinguished .flame {
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        /* Flower Styling (CodePen-inspired) */
+        .night {
+            position: fixed;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 100%;
+            filter: blur(0.1vmin);
+            background-image: radial-gradient(
+                ellipse at top,
+                transparent 0%,
+                var(--purple-bg-end)
+            ),
+            radial-gradient(
+                ellipse at bottom,
+                var(--purple-bg-end),
+                rgba(255, 0, 255, 0.2) /* Pink glow at bottom */
+            ),
+            repeating-linear-gradient(
+                220deg,
+                rgb(0, 0, 0) 0px,
+                rgb(0, 0, 0) 19px,
+                transparent 19px,
+                transparent 22px
+            ),
+            repeating-linear-gradient(
+                189deg,
+                rgb(0, 0, 0) 0px,
+                rgb(0, 0, 0) 19px,
+                transparent 19px,
+                transparent 22px
+            ),
+            repeating-linear-gradient(
+                148deg,
+                rgb(0, 0, 0) 0px,
+                rgb(0, 0, 0) 19px,
+                transparent 19px,
+                transparent 22px
+            ),
+            linear-gradient(90deg, var(--pink-neon), var(--purple-bg-start)); /* Pinkish gradient */
+            z-index: -1; /* Behind other content */
+        }
+
+        .flowers {
+            position: absolute;
+            bottom: 0; /* Position at the bottom initially */
+            left: 50%;
+            transform: translateX(-50%) scale(0.1); /* Start small and centered */
+            transform-origin: bottom center;
+            opacity: 0; /* Initially hidden */
+            transition: opacity 1.5s ease-out, transform 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 10;
+        }
+
+        .flowers.bloomed {
+            opacity: 1;
+            transform: translateX(-50%) scale(0.9); /* Grows to final size */
+        }
+
+        .flower {
+            position: absolute;
+            bottom: 10vmin; /* Adjusted to be above the bottom */
+            transform-origin: bottom center;
+            z-index: 10;
+            --fl-speed: 0.8s;
+            left: 50%; /* Center the flower */
+            transform: translateX(-50%); /* Center the flower */
+        }
+
+        .flower--1 {
+            animation: moving-flower-1 4s linear infinite;
+        }
+        .flower--1 .flower__line {
+            height: 70vmin;
+            animation-delay: 0.3s;
+        }
+        .flower--1 .flower__line__leaf--1 {
+            animation: blooming-leaf-right var(--fl-speed) 1.6s backwards;
+        }
+        .flower--1 .flower__line__leaf--2 {
+            animation: blooming-leaf-right var(--fl-speed) 1.4s backwards;
+        }
+        .flower--1 .flower__line__leaf--3 {
+            animation: blooming-leaf-left var(--fl-speed) 1.2s backwards;
+        }
+        .flower--1 .flower__line__leaf--4 {
+            animation: blooming-leaf-left var(--fl-speed) 1s backwards;
+        }
+        .flower--1 .flower__line__leaf--5 {
+            animation: blooming-leaf-right var(--fl-speed) 1.8s backwards;
+        }
+        .flower--1 .flower__line__leaf--6 {
+            animation: blooming-leaf-left var(--fl-speed) 2s backwards;
+        }
+
+        .flower__leafs {
+            position: relative;
+            animation: blooming-flower 2s backwards;
+            animation-delay: 0.8s; /* Default delay */
+        }
+        .flower__leafs::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            transform: translate(-50%, -100%);
+            width: 8vmin;
+            height: 8vmin;
+            background-color: var(--pink-neon); /* Adapted color */
+            filter: blur(10vmin);
+        }
+
+        .flower__leaf {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 8vmin;
+            height: 11vmin;
+            border-radius: 51% 49% 47% 53% / 44% 45% 55% 69%;
+            background-color: var(--pink-neon); /* Adapted color */
+            background-image: linear-gradient(to top, #b454a4, var(--pink-neon)); /* Adapted color */
+            transform-origin: bottom center;
+            opacity: 0.9;
+            box-shadow: inset 0 0 2vmin rgba(255, 255, 255, 0.5);
+        }
+        .flower__leaf--1 {
+            transform: translate(-10%, 1%) rotateY(40deg) rotateX(-50deg);
+        }
+        .flower__leaf--2 {
+            transform: translate(-50%, -4%) rotateX(40deg);
+        }
+        .flower__leaf--3 {
+            transform: translate(-90%, 0%) rotateY(45deg) rotateX(50deg);
+        }
+        .flower__leaf--4 {
+            width: 8vmin;
+            height: 8vmin;
+            transform-origin: bottom left;
+            border-radius: 4vmin 10vmin 4vmin 4vmin;
+            transform: translate(-0%, 18%) rotateX(70deg) rotate(-43deg);
+            background-image: linear-gradient(to top, #ff007f, var(--pink-neon)); /* Adapted color */
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        .flower__white-circle {
+            position: absolute;
+            left: -3.5vmin;
+            top: -3vmin;
+            width: 9vmin;
+            height: 4vmin;
+            border-radius: 50%;
+            background-color: #fff;
+        }
+        .flower__white-circle::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 45%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 60%;
+            border-radius: inherit;
+            background-image: repeating-linear-gradient(
+                135deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                45deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                67.5deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                135deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                45deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                112.5deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                112.5deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                45deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                22.5deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                45deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                22.5deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                135deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                157.5deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                67.5deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            repeating-linear-gradient(
+                67.5deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 12px
+            ),
+            linear-gradient(90deg, rgb(255, 235, 18), rgb(255, 206, 0)); /* Yellow center */
+        }
+
+        .flower__line {
+            height: 55vmin;
+            width: 1.5vmin;
+            background-image: linear-gradient(
+                to left,
+                rgb(0, 0, 0, 0.2),
+                transparent,
+                rgba(255, 255, 255, 0.2)
+            ),
+            linear-gradient(to top, transparent 10%, #ff007f, #ff00ff); /* Adapted color */
+            box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.5);
+            animation: grow-flower-tree 4s backwards;
+        }
+
+        .flower__line__leaf {
+            --w: 7vmin;
+            --h: calc(var(--w) + 2vmin);
+            position: absolute;
+            top: 20%;
+            left: 90%;
+            width: var(--w);
+            height: var(--h);
+            border-top-right-radius: var(--h);
+            border-bottom-left-radius: var(--h);
+            background-image: linear-gradient(
+                to top,
+                rgba(255, 0, 127, 0.4), /* Adapted color */
+                var(--pink-neon) /* Adapted color */
+            );
+        }
+        .flower__line__leaf--1 {
+            transform: rotate(70deg) rotateY(30deg);
+        }
+        .flower__line__leaf--2 {
+            top: 45%;
+            transform: rotate(70deg) rotateY(30deg);
+        }
+        .flower__line__leaf--3,
+        .flower__line__leaf--4,
+        .flower__line__leaf--6 {
+            border-top-right-radius: 0;
+            border-bottom-left-radius: 0;
+            border-top-left-radius: var(--h);
+            border-bottom-right-radius: var(--h);
+            left: -460%;
+            top: 12%;
+            transform: rotate(-70deg) rotateY(30deg);
+        }
+        .flower__line__leaf--4 {
+            top: 40%;
+        }
+        .flower__line__leaf--5 {
+            top: 0;
+            transform-origin: left;
+            transform: rotate(70deg) rotateY(30deg) scale(0.6);
+        }
+        .flower__line__leaf--6 {
+            top: -2%;
+            left: -450%;
+            transform-origin: right;
+            transform: rotate(-70deg) rotateY(30deg) scale(0.6);
+        }
+
+        .flower__light {
+            position: absolute;
+            bottom: 0vmin;
+            width: 1vmin;
+            height: 1vmin;
+            background-color: rgb(255, 251, 0); /* Yellow light */
+            border-radius: 50%;
+            filter: blur(0.2vmin);
+            animation: light-ans 4s linear infinite backwards;
+        }
+        .flower__light:nth-child(odd) {
+            background-color: var(--pink-neon); /* Adapted color */
+        }
+        .flower__light--1 {
+            left: -2vmin;
+            animation-delay: 1s;
+        }
+        .flower__light--2 {
+            left: 3vmin;
+            animation-delay: 0.5s;
+        }
+        .flower__light--3 {
+            left: -6vmin;
+            animation-delay: 0.3s;
+        }
+        .flower__light--4 {
+            left: 6vmin;
+            animation-delay: 0.9s;
+        }
+        .flower__light--5 {
+            left: -1vmin;
+            animation-delay: 1.5s;
+        }
+        .flower__light--6 {
+            left: -4vmin;
+            animation-delay: 3s;
+        }
+        .flower__light--7 {
+            left: 3vmin;
+            animation-delay: 2s;
+        }
+        .flower__light--8 {
+            left: -6vmin;
+            animation-delay: 3.5s;
+        }
+
+        .grow-ans {
+            animation: grow-ans 2s var(--d) backwards;
+        }
+
+        @keyframes grow-ans {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes light-ans {
+            0% {
+                opacity: 0;
+                transform: translateY(0vmin);
+            }
+            25% {
+                opacity: 1;
+                transform: translateY(-5vmin) translateX(-2vmin);
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(-15vmin) translateX(2vmin);
+                filter: blur(0.2vmin);
+            }
+            75% {
+                transform: translateY(-20vmin) translateX(-2vmin);
+                filter: blur(0.2vmin);
+            }
+            100% {
+                transform: translateY(-30vmin);
+                opacity: 0;
+                filter: blur(1vmin);
+            }
+        }
+
+        @keyframes moving-flower-1 {
+            0%, 100% { transform: translateX(-50%) rotate(2deg); }
+            50% { transform: translateX(-50%) rotate(-2deg); }
+        }
+
+        @keyframes blooming-leaf-right {
+            0% {
+                transform-origin: left;
+                transform: rotate(70deg) rotateY(30deg) scale(0);
+            }
+        }
+
+        @keyframes blooming-leaf-left {
+            0% {
+                transform-origin: right;
+                transform: rotate(-70deg) rotateY(30deg) scale(0);
+            }
+        }
+
+        @keyframes grow-flower-tree {
+            0% {
+                height: 0;
+                border-radius: 1vmin;
+            }
+        }
+
+        @keyframes blooming-flower {
+            0% {
+                transform: scale(0);
+            }
+        }
+
+        .not-loaded * {
+            animation-play-state: paused !important;
+        }
+
+        /* End CodePen-inspired Flower Styling */
+
+        @keyframes neon-glow {
+            0% { box-shadow: 0 0 10px var(--pink-neon), 0 0 20px var(--pink-neon); }
+            100% { box-shadow: 0 0 20px var(--pink-neon), 0 0 40px var(--pink-neon), 0 0 60px var(--pink-neon); }
+        }
+
+        /* Message Styling */
+        .message {
+            position: absolute;
+            bottom: 10vh; /* Adjust position as needed */
+            font-size: 1.8em;
+            color: #fff;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1.5s ease-out, transform 1.5s ease-out;
+            z-index: 6;
+            text-shadow:
+                0 0 5px var(--pink-neon),
+                0 0 10px var(--pink-neon),
+                0 0 20px var(--pink-neon),
+                0 0 40px var(--pink-neon);
+        }
+
+        .message.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            .candle-body {
+                width: 40px;
+                height: 120px;
+            }
+            .flame {
+                width: 20px;
+                height: 30px;
+                top: -25px;
+            }
+            .message {
+                font-size: 1.5em;
+                bottom: 5vh;
+            }
+            .flowers {
+                transform: translateX(-50%) scale(0.05); /* Start even smaller on mobile */
+            }
+            .flowers.bloomed {
+                transform: translateX(-50%) scale(0.6); /* Grows to final size for mobile */
+            }
+        }
+    </style>
+</head>
+<body class="not-loaded">
+    <div class="container">
+        <div class="night"></div>
+        <div class="tap-me-hint" id="tap-me-hint">Tap me</div>
+        <div class="candle-wrapper" id="candle">
+            <div class="candle-body">
+                <div class="candle-wick"></div>
+                <div class="flame"></div>
+            </div>
+        </div>
+
+        <div class="flowers">
+            <div class="flower flower--1" id="flower">
+                <div class="flower__leafs flower__leafs--1">
+                    <div class="flower__leaf flower__leaf--1"></div>
+                    <div class="flower__leaf flower__leaf--2"></div>
+                    <div class="flower__leaf flower__leaf--3"></div>
+                    <div class="flower__leaf flower__leaf--4"></div>
+                    <div class="flower__white-circle"></div>
+
+                    <div class="flower__light flower__light--1"></div>
+                    <div class="flower__light flower__light--2"></div>
+                    <div class="flower__light flower__light--3"></div>
+                    <div class="flower__light flower__light--4"></div>
+                    <div class="flower__light flower__light--5"></div>
+                    <div class="flower__light flower__light--6"></div>
+                    <div class="flower__light flower__light--7"></div>
+                    <div class="flower__light flower__light--8"></div>
+
+                </div>
+                <div class="flower__line">
+                    <div class="flower__line__leaf flower__line__leaf--1"></div>
+                    <div class="flower__line__leaf flower__line__leaf--2"></div>
+                    <div class="flower__line__leaf flower__line__leaf--3"></div>
+                    <div class="flower__line__leaf flower__line__leaf--4"></div>
+                    <div class="flower__line__leaf flower__line__leaf--5"></div>
+                    <div class="flower__line__leaf flower__line__leaf--6"></div>
+                </div>
+            </div>
+            <div class="grow-ans" style="--d:1.2s">
+              <div class="flower__g-long">
+                <div class="flower__g-long__top"></div>
+                <div class="flower__g-long__bottom"></div>
+              </div>
+            </div>
+        </div>
+
+        <div class="message" id="message">
+            I love you Mama Annie
+        </div>
+    </div>
+
+    <script>
+        const candle = document.getElementById('candle');
+        const flowersContainer = document.querySelector('.flowers'); // Get the container for flowers
+        const message = document.getElementById('message');
+        const tapMeHint = document.getElementById('tap-me-hint');
+
+        candle.addEventListener('click', () => {
+            if (!candle.classList.contains('extinguished')) {
+                candle.classList.add('extinguished');
+                tapMeHint.classList.add('hidden'); // Hide the hint
+                setTimeout(() => {
+                    candle.style.opacity = '0';
+                    candle.style.pointerEvents = 'none'; // Disable further clicks on candle
+                }, 500); // Allow flame transition to finish
+
+                setTimeout(() => {
+                    document.body.classList.remove('not-loaded'); // Start flower animations
+                    flowersContainer.classList.add('bloomed'); // Trigger flowers growth
+                    message.classList.add('visible');
+                }, 700); // Start flower bloom slightly after candle disappears
+            }
+        });
+    </script>
+</body>
+</html>
